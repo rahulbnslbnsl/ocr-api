@@ -1,0 +1,22 @@
+from fastapi import FastAPI, File, UploadFile
+from fastapi.middleware.cors import CORSMiddleware
+import easyocr
+import io
+from PIL import Image
+
+app = FastAPI()
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+reader = easyocr.Reader(['en'])
+
+@app.post("/ocr")
+async def ocr_extract(file: UploadFile = File(...)):
+    contents = await file.read()
+    image = Image.open(io.BytesIO(contents))
+    result = reader.readtext(image, detail=0)
+    return {"text": "\n".join(result)}
